@@ -1,3 +1,7 @@
+/*
+城市数据接口地址为
+http://guolin.tech/api/china
+ */
 package com.example.fengtao.coolweather.fragment;
 
 import android.app.ProgressDialog;
@@ -92,10 +96,13 @@ public class ChooseAreaFragment extends Fragment {
         });
         queryProvinces();
     }
-
+    
+    //查询省的信息，优先从数据库中查，如果数据库中没有数据则向服务器请求数据，请求的结果存入数据库中后再通过查询数据库得数据结果
     private void queryProvinces() {
         titleText.setText("中国");
+        //设后退按钮为不可见
         backButton.setVisibility(View.GONE);
+        //Litepal的查询数据库的方法，结果放入provinceList中，它是一个泛型实例，List<Province>
         provinceList = LitePal.findAll(Province.class);
         if(provinceList.size() > 0 ){
             dataList.clear();
@@ -103,14 +110,17 @@ public class ChooseAreaFragment extends Fragment {
                 dataList.add(province.getProvinceName());
             }
             adapter.notifyDataSetChanged();
+            //默认选中第一个数据
             listView.setSelection(0);
+            //设置当前页的级别为province，其实就是标识当前页，为后续操作做准备
             currentLevel = LEVEL_PROVINCE;
         }else{
             String address="http://guolin.tech/api/china";
             queryFromServer(address,"province");
         }
     }
-
+    
+    //查询市的数据，优先向数据库中去查，没有则向服务器请求
     private void queryCities() {
         titleText.setText(selectedProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
@@ -129,7 +139,8 @@ public class ChooseAreaFragment extends Fragment {
             queryFromServer(address,"city");
         }
     }
-
+    
+    //查询县的数据，优先查数据库，没有再向服务器请求数据
     private void queryCounties() {
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
@@ -151,9 +162,12 @@ public class ChooseAreaFragment extends Fragment {
 
         
     }
-
+    
+    
     private void queryFromServer(String address, final String type) {
+        //显示一个进度条
         showProgressDialog();
+        //HttpUtil类中封装了请求接口数据的方法，在sendOkHttpRequest中传入一个回调函数，在回调函数中处理服务器返回的结果
         HttpUtil.sendOkHttpRequest(address, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -165,18 +179,21 @@ public class ChooseAreaFragment extends Fragment {
                     }
                 });
             }
-
+            
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                //获取返回内容，这里返回的结果是json字符串
                 String responseText = response.body().string();
                 boolean result = false;
                 if("province".equals(type)){
+                    //Utility的handleProvinceResponse负责处理返回的省级数据
                     result = Utility.handleProvinceResponse(responseText);
                 }else if("city".equals(type)){
                     result = Utility.handleCityResponse(responseText,selectedProvince.getId());
                 }else if("county".equals(type)){
                     result = Utility.handleCountyResponse(responseText,selectedCity.getId());
                 }
+                //根据获得结果更新界面的数据，此处由于涉及更新界面所以在runOnUiThread中进行
                 if(result){
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
