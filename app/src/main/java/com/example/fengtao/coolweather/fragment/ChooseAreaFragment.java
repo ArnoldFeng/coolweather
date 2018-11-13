@@ -5,6 +5,7 @@ http://guolin.tech/api/china
 package com.example.fengtao.coolweather.fragment;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -19,7 +20,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.fengtao.coolweather.MainActivity;
 import com.example.fengtao.coolweather.R;
+import com.example.fengtao.coolweather.WeatherActivity;
 import com.example.fengtao.coolweather.db.City;
 import com.example.fengtao.coolweather.db.County;
 import com.example.fengtao.coolweather.db.Province;
@@ -81,6 +84,13 @@ public class ChooseAreaFragment extends Fragment {
                     selectedCity = cityList.get(position);
                     Log.d("selectedCity.id",""+selectedCity.getId());
                     queryCounties();
+                }else if(currentLevel == LEVEL_COUNTY){
+                    String weatherId = countyList.get(position).getWeatherId();
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    intent.putExtra("weather_id",weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
+                    
                 }
             }
         });
